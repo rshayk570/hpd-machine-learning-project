@@ -1,0 +1,8 @@
+,groups (n>=200),lowest rate,highest rate,variance explained
+borough,5.0,0.492,0.561,0.002
+unit type,4.0,0.26,0.989,0.081
+HPD triage type,3.0,0.497,0.556,0.003
+prior violations 6m,4.0,0.493,0.558,0.003
+problems in complaint,5.0,0.426,0.772,0.071
+major category,14.0,0.112,0.986,0.035
+minor category,45.0,0.112,0.986,0.092

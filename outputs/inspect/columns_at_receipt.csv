@@ -1,0 +1,34 @@
+column,known_at_receipt,use,note
+received_date,yes,feature (season/weekday) and split key,
+problem_id,yes,key only,sequence number; do not use as a feature
+complaint_id,yes,key only,sequence number; do not use as a feature
+building_id,yes,join key for building history,100% populated; never 0
+borough,yes,feature,
+house_number,yes,no,address; building_id covers it
+street_name,yes,no,address; building_id covers it
+post_code,yes,feature (coarse location),
+block,yes,no,bbl covers it
+lot,yes,no,bbl covers it
+apartment,yes,maybe,free text; could flag public-area vs unit complaints
+community_board,yes,feature,
+unit_type,yes,feature,
+space_type,yes,feature,
+type,yes,feature,HPD's own intake triage (EMERGENCY / NON EMERGENCY / IMMEDIATE EMERGENCY); assigned from the category at intake
+major_category,yes,feature,
+minor_category,yes,feature,
+problem_code,yes,feature,
+complaint_status,no,label side,set when HPD acts
+complaint_status_date,no,label side,
+problem_status,no,label side,
+problem_status_date,no,label side; the only date for when the outcome became known,
+status_description,no,label source,
+problem_duplicate_flag,later,drop,set when HPD links the complaint to an earlier building-wide complaint; 100% of Y rows carry the duplicate wording; 6 Y rows among 1.09M P/N rows; its information (an earlier complaint at the same building within 7 days: 99.6% of flagged) is reconstructible from history at receipt
+complaint_anonymous_flag,yes,feature,
+unique_key,yes,key only,311 service request id
+latitude,yes,feature (location),
+longitude,yes,feature (location),
+council_district,yes,feature,
+census_tract,yes,feature (coarse),
+bin,yes,join key,99.7% populated
+bbl,yes,join key (tax lot; links to PLUTO/violations),99.7% populated
+nta,yes,feature (neighborhood),

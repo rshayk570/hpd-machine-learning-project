@@ -1,0 +1,15 @@
+__pycache__/
+.venv/
+.DS_Store
+
+# data is fetched by script and never committed
+data/
+
+# personal study guides, drafts and course PDFs (not part of the project code)
+*.pdf
+!outputs/figures/*.pdf
+hpd-findings.md
+oral-code-guide.md
+report-guide.md
+report-draft.md
+report-changes-line-of-travel.md

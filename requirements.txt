@@ -1,0 +1,5 @@
+pandas
+matplotlib==3.9.4
+requests
+pyarrow
+scikit-learn==1.6.1

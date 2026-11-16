@@ -1,0 +1,2 @@
+https://data.cityofnewyork.us/Housing-Development/Housing-Maintenance-Code-Complaints-and-Problems/ygpa-z7cr/about_data
+	- download dictionary of terms

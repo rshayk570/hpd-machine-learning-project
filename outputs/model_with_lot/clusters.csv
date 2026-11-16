@@ -1,0 +1,4 @@
+variable,slice,kind,complaints,violations,positive rate,baseline recall,baseline lo,baseline hi,baseline share selected,logistic recall,logistic lo,logistic hi,logistic share selected,gradient recall,gradient lo,gradient hi,gradient share selected,train median p12,train median n12,train median c30,"validation gain, logistic","validation gain, boosting"
+building-history cluster,0,unsupervised,34203,15456,0.4519,0.3076,0.2998,0.316,0.2099,0.2511,0.2443,0.2582,0.1594,0.2379,0.2278,0.2484,0.153,0.0,0.0,0.0,-0.0,0.0
+building-history cluster,1,unsupervised,60901,30255,0.4968,0.3721,0.3668,0.3773,0.2622,0.4179,0.4125,0.4233,0.2851,0.427,0.4217,0.4323,0.2869,6.0,10.0,2.0,-0.0,0.0
+building-history cluster,2,unsupervised,36030,17101,0.4746,0.3817,0.3724,0.3898,0.2675,0.4228,0.4127,0.4322,0.2767,0.4407,0.43,0.451,0.2797,30.0,46.0,10.0,-0.0,0.0

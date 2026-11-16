@@ -1,0 +1,12 @@
+,P@25%,Recall@25%,check
+Random,0.523,0.249,B heat season
+HPD current order (fastest verdict first),0.602,0.286,B heat season
+HPD triage type,0.547,0.26,B heat season
+"Prior violations at building, 6m",0.546,0.26,B heat season
+"Building violation rate, 12m",0.596,0.283,B heat season
+Unit type,0.608,0.288,B heat season
+Problems in complaint,0.716,0.341,B heat season
+"Major category, first problem",0.634,0.301,B heat season
+"Major category, highest across problems",0.718,0.342,B heat season
+"Minor category, first problem",0.634,0.301,B heat season
+"Minor category, highest across problems",0.725,0.345,B heat season

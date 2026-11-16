@@ -1,0 +1,5 @@
+ranking,recall@25%,lo,hi,precision@25%,p_lo,p_hi,minus baseline,d_lo,d_hi,weeks ahead of baseline,violations found per week,AUC
+Random,0.2487,0.2461,0.2514,0.4774,0.4653,0.4904,-0.1147,-0.1201,-0.1086,0.0,437.1143,0.5
+Baseline: most problems first,0.3634,0.3589,0.3678,0.6962,0.6838,0.7074,0.0,0.0,0.0,0.0,638.3429,0.6504
+Logistic (readable),0.3753,0.3709,0.3792,0.7192,0.7051,0.7321,0.0118,0.01,0.0139,1.0,658.6286,0.7175
+Gradient boosting (flexible),0.3807,0.3766,0.3849,0.7297,0.7158,0.7434,0.0173,0.0143,0.0201,1.0,668.3143,0.7299

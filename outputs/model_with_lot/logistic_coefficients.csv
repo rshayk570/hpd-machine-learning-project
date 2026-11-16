@@ -1,0 +1,155 @@
+feature,coefficient,odds_ratio
+problems_1,-0.665,0.514
+minor_UNSANITARY CONDITION | SEWAGE,-0.659,0.517
+space_type_ELEVATOR,-0.616,0.54
+rate12_<0.20,-0.492,0.611
+minor_PLUMBING | WATER SUPPLY,-0.452,0.637
+c7_30+,-0.432,0.649
+minor_GENERAL | VENTILATION SYSTEM,-0.336,0.715
+space_type_OTHER ROOM/AREA,-0.329,0.72
+minor_APPLIANCE | REFRIGERATOR,-0.32,0.726
+problems_2,-0.297,0.743
+minor_SAFETY | SPRINKLER,-0.271,0.763
+minor_PLUMBING | STEAM PIPE/RISER,-0.262,0.769
+anonymous_yes,-0.261,0.77
+minor_infrequent_sklearn,-0.255,0.775
+months_since_p_never,-0.243,0.784
+space_type_BUILDING ENTRANCE,-0.203,0.816
+has_elevator_yes,-0.195,0.822
+minor_APPLIANCE | ELECTRIC/GAS RANGE,-0.191,0.826
+rate12_0.20-0.35,-0.18,0.835
+minor_PLUMBING | TOILET,-0.173,0.841
+minor_PLUMBING | RADIATOR,-0.167,0.846
+minor_ELECTRIC | WIRING,-0.165,0.847
+cb_MA6,-0.154,0.857
+c30_30+,-0.134,0.874
+minor_UNSANITARY CONDITION | MOLD,-0.134,0.875
+month_02,-0.131,0.878
+has_flooring_stairs_no,-0.125,0.882
+days_since_c_<1,-0.125,0.883
+minor_GENERAL | JANITOR/SUPER,-0.114,0.892
+borough_MANHATTAN,-0.11,0.896
+cb_QU1,-0.107,0.898
+space_type_ENTIRE APARTMENT,-0.102,0.903
+unit_type_PUBLIC AREA,-0.098,0.907
+weekend_yes,-0.097,0.907
+has_heat_hot_water_no,-0.097,0.908
+minor_UNSANITARY CONDITION | GARBAGE/RECYCLING STORAGE,-0.088,0.915
+cb_MA8,-0.088,0.916
+space_type_ENTRANCE/FOYER,-0.088,0.916
+has_appliance_yes,-0.084,0.919
+hours_night 0-7,-0.081,0.922
+n12_0,-0.079,0.924
+has_unsanitary_condition_no,-0.069,0.933
+minor_PAINT/PLASTER | DOOR/FRAME,-0.063,0.939
+space_type_LAUNDRY ROOM,-0.062,0.94
+month_03,-0.06,0.942
+has_plumbing_yes,-0.058,0.944
+space_type_KITCHEN,-0.054,0.948
+cb_BR1,-0.051,0.95
+cb_QU6,-0.05,0.951
+c30_10-29,-0.05,0.951
+month_07,-0.049,0.952
+cb_QU8,-0.045,0.956
+has_water_leak_no,-0.041,0.96
+has_paint_plaster_no,-0.041,0.96
+p6_0,-0.04,0.96
+has_line_of_travel_no,-0.04,0.961
+has_door_window_no,-0.039,0.961
+has_general_no,-0.038,0.963
+month_04,-0.038,0.963
+has_safety_yes,-0.037,0.963
+minor_DOOR/WINDOW | WINDOW FRAME,-0.036,0.964
+has_outside_building_no,-0.036,0.965
+minor_OUTSIDE BUILDING | ROOFING,-0.034,0.966
+p12_3-9,-0.034,0.967
+cb_BR2,-0.03,0.971
+month_06,-0.029,0.971
+p12_10-29,-0.028,0.972
+minor_ELECTRIC | POWER OUTAGE,-0.028,0.973
+type_EMERGENCY,-0.026,0.975
+pall_1-2,-0.026,0.975
+has_electric_yes,-0.024,0.976
+cb_BR7,-0.015,0.985
+p6_3-9,-0.013,0.987
+borough_QUEENS,-0.012,0.988
+months_since_p_4-12,-0.011,0.989
+month_11,-0.009,0.991
+pall_0,-0.003,0.997
+cb_QU9,-0.002,0.998
+cb_BR3,0.001,1.001
+type_NON EMERGENCY,0.001,1.001
+c7_0,0.003,1.003
+p12_30+,0.004,1.004
+p6_1-2,0.004,1.004
+space_type_LIVING ROOM,0.007,1.007
+cb_BR8,0.008,1.008
+p12_1-2,0.01,1.01
+month_01,0.012,1.012
+cb_BR16,0.012,1.012
+cb_QU14,0.013,1.013
+cb_BR6,0.013,1.013
+cb_MA11,0.013,1.013
+space_type_STAIRS,0.015,1.016
+c30_1-2,0.023,1.023
+has_safety_no,0.026,1.026
+has_flooring_stairs_yes,0.027,1.027
+pall_10-29,0.029,1.029
+p6_30+,0.03,1.03
+has_water_leak_yes,0.031,1.031
+cb_QU7,0.033,1.033
+minor_ELECTRIC | OUTLET/SWITCH,0.037,1.038
+minor_OUTSIDE BUILDING | ROOF DOOR/HATCH,0.038,1.039
+c30_0,0.039,1.04
+minor_ELECTRIC | NO LIGHTING,0.042,1.043
+space_type_BATHROOM,0.045,1.046
+cb_ST1,0.046,1.047
+borough_BRONX,0.054,1.055
+minor_GENERAL | BELL/BUZZER/INTERCOM,0.054,1.056
+pall_30+,0.055,1.057
+month_08,0.057,1.059
+cb_BR12,0.059,1.061
+cb_BR17,0.06,1.062
+space_type_LOBBY,0.067,1.07
+space_type_YARD,0.068,1.07
+month_05,0.07,1.072
+has_paint_plaster_yes,0.07,1.072
+n12_3-9,0.07,1.072
+n12_10-29,0.075,1.077
+months_since_p_1,0.079,1.083
+has_general_yes,0.084,1.088
+has_door_window_yes,0.096,1.101
+hours_day 8-17,0.112,1.119
+minor_DOOR/WINDOW | WINDOW PANE,0.114,1.121
+minor_SAFETY | SMOKE DETECTOR,0.116,1.124
+cb_MA9,0.119,1.127
+minor_PLUMBING | BASIN/SINK,0.12,1.127
+minor_FLOORING/STAIRS | FLOOR,0.122,1.13
+cb_BR10,0.124,1.132
+minor_GENERAL | CABINET,0.126,1.134
+months_since_p_13-36,0.128,1.136
+space_type_FIRE ESCAPE/EGRESS,0.129,1.137
+cb_MA10,0.131,1.14
+cb_BR18,0.132,1.141
+minor_GENERAL | MAILBOX,0.134,1.144
+minor_WATER LEAK | HEAVY FLOW,0.138,1.148
+rate12_0.50-0.65,0.156,1.169
+month_09,0.157,1.17
+minor_DOOR/WINDOW | DOOR,0.169,1.184
+minor_HEAT/HOT WATER | APARTMENT ONLY,0.196,1.217
+problems_4-5,0.198,1.219
+minor_WATER LEAK | SLOW LEAK,0.21,1.233
+minor_WATER LEAK | DAMP SPOT,0.211,1.235
+minor_FLOORING/STAIRS | STAIRS,0.249,1.283
+rate12_>0.65,0.284,1.328
+minor_SAFETY | CARBON MONOXIDE DETECTOR,0.305,1.356
+minor_PAINT/PLASTER | CEILING,0.315,1.371
+month_10,0.32,1.378
+problems_6+,0.334,1.396
+minor_UNSANITARY CONDITION | PESTS,0.52,1.682
+has_outside_building_yes,0.601,1.824
+minor_GENERAL | COOKING GAS,0.749,2.114
+unit_type_APARTMENT,0.775,2.171
+minor_HEAT/HOT WATER | ENTIRE BUILDING,1.247,3.478
+has_line_of_travel_yes,1.879,6.548
+minor_LINE OF TRAVEL | LINE OF TRAVEL,2.939,18.902
