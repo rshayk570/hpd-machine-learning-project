@@ -24,6 +24,24 @@ python 11_figures.py                      # report figures into outputs/figures/
 `10_models.py` prints the headline table (recall at the top 25% of each week's labeled pool, test weeks)
 and writes it to `outputs/model/headline.csv`. Seed 0 throughout.
 
+## What-if runs (seconds, not minutes)
+
+`headline.py` reruns only the headline, with the same split, metric, tie-break, bootstrap and model code as
+`10_models.py`, and caches each model's test scores by setting:
+
+```bash
+python headline.py --check                 # defaults reproduce outputs/model/headline.csv
+python headline.py --budget 0.10           # another visit budget: instant, no refit
+python headline.py --C 0.01                # another logistic penalty
+python headline.py --lr 0.1 --trees 200 --leaves 63 --min-leaf 50
+python headline.py --keep-lot              # LINE OF TRAVEL kept
+python headline.py --warm                  # pre-fit the whole tuning grid once (about 5 min)
+```
+
+After `--warm`, every value in the tuning grid is instant; a new boosting setting takes 5-15 s and a new logistic
+`C` up to a minute. Changing a feature means editing `09_features.py` and rerunning it (15 s); the cache is keyed
+on the feature table, so the next `headline.py` run refits.
+
 LINE OF TRAVEL complaints are removed from train and test (a declared change). HPD enters them after an
 inspector sees a condition on the way to the complainant's apartment; none has a 311 request number. The
 split's week boundaries are fixed before the removal. `--keep-lot` writes the earlier run to
