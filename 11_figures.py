@@ -7,6 +7,9 @@ LINE OF TRAVEL complaints are left out everywhere, as in 10_models.py; fig8 comp
 Colors: the two models take categorical slots 1 and 2 (blue, orange); the baseline is ink with an open
 square marker; random and ceilings are muted gray reference lines. Every series is also labeled directly.
 """
+# Purpose: Report figures.
+# Input:   data/model/complaints_features.parquet, data/model/test_scores.parquet, outputs/model/*.csv, outputs/model_with_lot/headline.csv (fig8).
+# Output:  outputs/figures/fig*.pdf and .png, outputs/figures/fig_numbers.csv.
 import numpy as np
 import pandas as pd
 import matplotlib
@@ -33,11 +36,17 @@ plt.rcParams.update({
 NUMBERS = []
 
 
+# Purpose: Month tick labels on a date axis.
+# Input:   axes, months between ticks.
+# Output:  none (formats the axes).
 def months(ax, step=3):
     ax.xaxis.set_major_locator(mdates.MonthLocator(bymonth=range(1, 13, step)))
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%b\n%Y"))
 
 
+# Purpose: Save a figure as PDF and PNG and close it.
+# Input:   figure, file stem.
+# Output:  outputs/figures/<name>.pdf and .png.
 def save(fig, name):
     for ext in ("pdf", "png"):
         fig.savefig(FIG / f"{name}.{ext}", dpi=300 if ext == "png" else None)
@@ -45,12 +54,18 @@ def save(fig, name):
     print("wrote", name)
 
 
+# Purpose: Top share of each week's pool for one score (same cut as select() in 10_models.py).
+# Input:   complaint frame, scores, share of the week.
+# Output:  boolean Series.
 def week_select(frame, score, k):
     d = frame.assign(s=score).sort_values(["week", "s", "tie"], ascending=[True, False, False])
     sel = d.groupby("week").cumcount() < np.maximum(1, (k * d.groupby("week").s.transform("size")).round())
     return sel.reindex(frame.index)
 
 
+# Purpose: Recall per week for one selection.
+# Input:   complaint frame, boolean selection.
+# Output:  Series of recall by week.
 def week_recall(frame, sel):
     g = pd.DataFrame({"w": frame.week, "hit": sel & (frame.label == 1), "pos": frame.label}).groupby("w").sum()
     return g.hit / g.pos
@@ -160,6 +175,9 @@ for i, k in enumerate(ks):
 
 
 # ---------------------------------------------------------------- slice dot plots (fig5, fig6, fig7)
+# Purpose: Dot plot of slice recall with intervals for the three rankings.
+# Input:   slice rows from slices.csv, file stem, title, optional highlighted slice, note, height, group per row.
+# Output:  the figure, saved with save().
 def slice_plot(rows, name, title, highlight=None, note=None, height=None, groups=None):
     rows = rows.reset_index(drop=True)
     n = len(rows)

@@ -17,6 +17,9 @@ Window: received weeks starting 2024-02-05 (so the 30-day lookback is complete; 
 through the week ending 2026-08-02 (90 days before the 2026-11-05 pull, section 8.5: 97-98% of labels are in).
 Writes data/model/complaints_features.parquet.
 """
+# Purpose: Build the complaint-level modeling table: one row per labeled complaint, intake-time features only.
+# Input:   data/rows/*.parquet (04), data/history/{p,n}_by_building_month.parquet (05).
+# Output:  data/model/complaints_features.parquet.
 import numpy as np
 import pandas as pd
 
@@ -26,6 +29,9 @@ START, END = pd.Timestamp("2024-02-05"), pd.Timestamp("2026-08-03")   # Mondays;
 SEVERITY = {"NON EMERGENCY": 0, "EMERGENCY": 1, "IMMEDIATE EMERGENCY": 2}
 
 
+# Purpose: Load every pulled problem row in problem_id order (fixes which problem `first` picks).
+# Input:   data/rows/<class>.parquet.
+# Output:  DataFrame of problem rows sorted by problem_id.
 def load_rows():
     files = [f for f in sorted((DATA / "rows").glob("*.parquet")) if f.name != "complaints.parquet"]
     r = pd.concat(pd.read_parquet(f) for f in files).reset_index(drop=True)
@@ -35,6 +41,9 @@ def load_rows():
     return r.sort_values("problem_id")
 
 
+# Purpose: Cumulative outcome rows per building by month index.
+# Input:   tag 'p' or 'n'.
+# Output:  DataFrame: building_id, hm, cum, sorted by hm.
 def history(tag):
     """Cumulative outcome rows per building by month index (months since Jan 2003)."""
     h = pd.read_parquet(DATA / "history" / f"{tag}_by_building_month.parquet")
@@ -44,6 +53,9 @@ def history(tag):
     return h[["building_id", "hm", "cum"]].sort_values("hm")
 
 
+# Purpose: Look up a building's history value as of the month before a complaint's month.
+# Input:   history table, building ids, month indexes, column to return.
+# Output:  Series aligned to the complaints (NaN when no history).
 def asof(h, building, upto, col="cum"):
     """Value of `col` at each complaint's building as of the end of month `upto - 1` (NaN if no history)."""
     key = pd.DataFrame({"building_id": building.values, "hm": (upto - 1).astype("int64").values, "i": building.index})
@@ -51,6 +63,9 @@ def asof(h, building, upto, col="cum"):
     return got.set_index("i")[col].reindex(building.index)
 
 
+# Purpose: Build the complaint table: label, intake features, building history, recent complaints.
+# Input:   data/rows/*.parquet, data/history/{p,n}_by_building_month.parquet.
+# Output:  data/model/complaints_features.parquet; one printed summary line.
 def main():
     r = load_rows()
 

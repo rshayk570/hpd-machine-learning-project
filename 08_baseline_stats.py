@@ -3,6 +3,9 @@ Nothing received on or after 2025-10-01 is used. Writes outputs/inspect/baseline
   Check A, off-season: rates fitted on 2024-10-01..2025-03-31, scored on 2025-04-01..2025-09-30.
   Check B, heat season: rates fitted on 2024-01-01..2024-09-30, scored on 2024-10-01..2025-03-31 (crosses the Oct 2024 shift).
 """
+# Purpose: Descriptive statistics and pre-test validation of the baseline, using nothing received after 2025-09-30.
+# Input:   data/rows/*.parquet (04), data/history/{p,n}_by_building_month.parquet (05).
+# Output:  outputs/inspect/feature_spread.csv, baseline_validation_A.csv and _B.csv; printed tables.
 import numpy as np
 import pandas as pd
 from hpd_api import DATA, OUTPUTS
@@ -30,11 +33,17 @@ c["wk"] = c.rec.dt.to_period("W-SUN").dt.start_time
 c["nb"] = c.n.clip(upper=5)
 c["midx"] = (c.rec.dt.year - 2003) * 12 + c.rec.dt.month - 1
 
+# Purpose: Cumulative outcome rows per building by month index (months since Jan 2003).
+# Input:   tag 'p' (violations) or 'n' (clean inspections).
+# Output:  DataFrame: building_id, hm, cum, sorted by hm.
 def hist(tag):
     h = pd.read_parquet(DATA / "history" / f"{tag}_by_building_month.parquet")
     h["hm"] = (h.m.dt.year - 2003) * 12 + h.m.dt.month - 1
     h["hm"] = h.hm.astype("int64"); h = h.sort_values(["building_id", "hm"]); h["cum"] = h.groupby("building_id").n.cumsum()
     return h[["building_id", "hm", "cum"]].sort_values("hm")
+# Purpose: Outcome rows at each complaint's building up to the end of the month before `upto`.
+# Input:   cumulative history table, Series of month indexes.
+# Output:  Series of counts aligned to the complaints (0 when no history).
 def asof(h, upto):
     key = pd.DataFrame({"building_id": c.building_id.values, "hm": (upto - 1).astype("int64").values, "i": c.index}).sort_values("hm")
     return pd.merge_asof(key, h, on="hm", by="building_id", direction="backward").set_index("i").cum.fillna(0).reindex(c.index)
@@ -49,6 +58,9 @@ print(f"training window: {len(win):,} labeled complaints, positive rate {win.lab
       f"{win.minor.nunique()} minor categories, {win.major.nunique()} major")
 
 # ---- 1. how much each field separates positives from negatives
+# Purpose: How much one field separates positives from negatives in the training window.
+# Input:   column name.
+# Output:  dict: groups with n >= 200, lowest and highest rate, variance explained.
 def spread(col):
     a = win.groupby(col).label.agg(["mean", "size"])
     big = a[a["size"] >= 200]
@@ -69,19 +81,31 @@ print("\nhow current speed relates to outcome (training window, days to verdict)
 print(win.groupby(pd.cut(win.days, [-1, 2, 7, 30, 1e5], labels=["0-2", "3-7", "8-30", "31+"])).label.agg(["mean", "size"]).round(3).to_string())
 
 # ---- 2. pre-test validation
+# Purpose: Keep only complaints in whole weeks inside a date range.
+# Input:   complaint frame, start date, end date (exclusive).
+# Output:  filtered complaint frame.
 def weeks(frame, a, b):
     w = frame[(frame.rec >= a) & (frame.rec < b)]
     n = w.groupby("wk").rec.agg(["min", "max"])
     ok = n.index[(n.index >= pd.Timestamp(a)) & (n.index + pd.Timedelta(days=7) <= pd.Timestamp(b))]
     return w[w.wk.isin(ok)]
+# Purpose: One validation check: fit rates on one period, score every candidate on a later one.
+# Input:   fit start, fit end, scored start, scored end.
+# Output:  (table of P@25% and Recall@25%, weekly precision per candidate, scored frame, minor-category coverage, minor rates, scored frame).
 def run(fit_a, fit_b, ev_a, ev_b):
     tr, ev = c[(c.rec >= fit_a) & (c.rec < fit_b)], weeks(c, ev_a, ev_b)
     base = tr.label.mean()
+    # Purpose: Positive rate per group in the fit period, shrunk toward the overall rate.
+    # Input:   column, frame (fit period by default), shrink strength.
+    # Output:  Series of rates by group value.
     def rate(col, frame=tr, s=20):
         x = frame.groupby(col).label.agg(["sum", "count"])
         return (x["sum"] + s * base) / (x["count"] + s)
     rm, rj = rate("major"), rate("minor")
     prob = r[r.complaint_id.isin(ev.index)]
+    # Purpose: Highest rate across each scored complaint's problems.
+    # Input:   problem-row column, rate Series.
+    # Output:  Series of scores aligned to the scored complaints.
     def hi(col, m):
         return prob[col].map(m).fillna(base).groupby(prob.complaint_id).max().reindex(ev.index)
     R = {"Random": pd.Series(0., index=ev.index),

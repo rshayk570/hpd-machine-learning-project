@@ -3,11 +3,17 @@
 Writes outputs/volume_by_year.csv. The weekly figure is the yearly count divided by 52 (a rough average:
 it hides the winter heat-season peak and, for the current year, only a partial year of data).
 """
+# Purpose: Complaint and problem volume per year and per week.
+# Input:   data/by_year/complaints_*.csv (01).
+# Output:  outputs/volume_by_year.csv; printed table.
 import pandas as pd
 
 from hpd_api import DATA, OUTPUTS
 
 
+# Purpose: Yearly and average weekly volume.
+# Input:   data/by_year/complaints_*.csv.
+# Output:  outputs/volume_by_year.csv; printed table.
 def main():
     files = sorted((DATA / "by_year").glob("complaints_*.csv"))
     if not files:

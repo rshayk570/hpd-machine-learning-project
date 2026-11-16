@@ -10,6 +10,9 @@ The full table is about 16M rows, so nothing here downloads it. Years before the
 and skipped on a rerun; the current year is always refetched. Use --refresh to refetch everything.
 The table updates daily, so counts differ slightly between runs: keep metadata.json with any result.
 """
+# Purpose: Fetch the small aggregate tables (provenance, columns, per-year counts); --inspect summarizes them.
+# Input:   The Open Data API (nothing with --inspect, which reads data/ only).
+# Output:  data/metadata.json, data/columns.csv, data/by_year/*.csv (--inspect: a printed summary only).
 import argparse
 import datetime as dt
 import json
@@ -19,7 +22,9 @@ import pandas as pd
 from hpd_api import DATA, FIRST_YEAR, soda, view_metadata, year_clause
 
 
-# Save the dataset's provenance (license, update times, fetch time) and its column dictionary.
+# Purpose: Save the dataset's provenance (license, update times, fetch time) and its column dictionary.
+# Input:   the API's metadata for the dataset.
+# Output:  data/metadata.json and data/columns.csv; prints one summary line.
 def save_metadata():
     m = view_metadata()
     iso = lambda t: dt.datetime.fromtimestamp(t, dt.timezone.utc).isoformat() if t else None  # noqa: E731
@@ -40,7 +45,9 @@ def save_metadata():
     print(f"metadata: license={out['license']!r}, rows updated {out['rows_updated_at_utc']}, {len(cols)} columns")
 
 
-# Fetch one received year's two aggregate tables and save them as CSVs.
+# Purpose: Fetch one received year's two aggregate tables.
+# Input:   year, refresh flag; the API.
+# Output:  data/by_year/status_<year>.csv and complaints_<year>.csv (skipped when cached).
 def fetch_year(year, refresh):
     this_year = dt.date.today().year
     status_f = DATA / "by_year" / f"status_{year}.csv"
@@ -61,7 +68,9 @@ def fetch_year(year, refresh):
     print(f"  {year}: {int(c['problems']):>9,} problems, {int(c['complaints']):>9,} complaints")
 
 
-# Summarize what earlier runs saved in data/. Reads files only: no network calls, nothing written.
+# Purpose: Summarize what earlier runs saved in data/. No network calls, nothing written.
+# Input:   data/metadata.json, data/columns.csv, data/by_year/*.csv.
+# Output:  printed summary only.
 def inspect_saved():
     meta_f = DATA / "metadata.json"
     if meta_f.exists():
@@ -106,7 +115,9 @@ def inspect_saved():
         print(f"  {r.n:>9,} {r.n / total:>6.1%}  {text}")
 
 
-# Fetch metadata and every year's aggregates, or with --inspect only summarize what is already saved.
+# Purpose: Fetch metadata and every year's aggregates, or with --inspect only summarize what is saved.
+# Input:   command-line flags.
+# Output:  the files above, or the printed summary.
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     # --refresh: refetch past years even when their CSVs are already saved.

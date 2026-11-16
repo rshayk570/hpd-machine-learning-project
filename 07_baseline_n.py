@@ -3,6 +3,9 @@
 Also compares taking a complaint's category from its lowest problem_id with the row-order `first` used in 06_inspect.py,
 where rows are concatenated by outcome class. Writes outputs/inspect/baseline_split.csv.
 """
+# Purpose: Compare candidate baselines on the proposed split.
+# Input:   data/rows/*.parquet (04).
+# Output:  outputs/inspect/baseline_split.csv; printed tables.
 import numpy as np
 import pandas as pd
 from hpd_api import DATA, OUTPUTS
@@ -33,14 +36,22 @@ te = c[(c.received >= "2026-01-05") & (c.received < "2026-07-27")].copy()
 print(f"train {len(tr):,} (P rate {tr.label.mean():.3f}); test {len(te):,} (P rate {te.label.mean():.3f}), {te.week.nunique()} weeks; "
       f"test pool per week median {te.groupby('week').size().median():.0f}, min {te.groupby('week').size().min()}")
 
+# Purpose: Positive rate per group on train, shrunk toward the overall rate.
+# Input:   column key, shrink strength (pseudo-complaints).
+# Output:  Series of rates by group value.
 def rate(key, shrink=20):
     base = tr.label.mean()
     a = tr.groupby(key).label.agg(["sum", "count"])
     return (a["sum"] + shrink * base) / (a["count"] + shrink)
+# Purpose: Score complaints by their group's rate.
+# Input:   complaint frame, key column, rate Series.
+# Output:  Series of scores (train base rate for unseen groups).
 def mapped(frame, key, r):
     return frame[key].map(r).fillna(tr.label.mean())
 
-# highest rate across a complaint's problems (a complaint with several problems is scored by its worst one)
+# Purpose: Highest rate across a complaint's problems (a complaint is scored by its worst one).
+# Input:   problem-row column, rate Series, complaint ids.
+# Output:  Series of scores, one per complaint id.
 def max_over_problems(col, r, ids):
     s = rows[rows.complaint_id.isin(ids)]
     return s[col].map(r).fillna(tr.label.mean()).groupby(s.complaint_id).max().reindex(ids)
@@ -58,6 +69,9 @@ scores = {
     "minor category, first problem": mapped(te, "minor", R_minor),
     "minor category, highest across problems": max_over_problems("minor", R_minor, te.index),
 }
+# Purpose: Weekly precision and recall at the top share of each week.
+# Input:   score Series, share of the week, complaint frame (test by default).
+# Output:  (mean weekly precision, mean weekly recall).
 def evaluate(score, frac, frame=te):
     prec, rec = [], []
     d = frame.assign(s=score.reindex(frame.index) + 1e-6 * rng.random(len(frame)))

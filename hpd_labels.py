@@ -18,6 +18,9 @@ Classes
   U_open      complaint still open (no verdict yet)
   U_missing   wording is missing
 """
+# Purpose: Map each outcome wording to a class, and the class-to-label rule.
+# Input:   status_description text.
+# Output:  Class names (GROUPS) and the label rule (LABEL_RULE); writes no files.
 import pandas as pd
 
 GROUPS = ["P", "N", "N_partial", "P_existing", "P_lead", "U_fixed", "U_noaccess", "U_open", "U_missing"]
@@ -37,6 +40,9 @@ LABEL_RULE = {
 }
 
 
+# Purpose: Classify one outcome wording.
+# Input:   a status_description string (or missing).
+# Output:  class name, or 'OTHER' for an unknown wording.
 def group_of(text):
     """Map one status_description wording to a class. Returns 'OTHER' for a wording nobody has read yet."""
     if not isinstance(text, str) or not text.strip():
@@ -66,6 +72,9 @@ def group_of(text):
     return "OTHER"
 
 
+# Purpose: Add the class column to a table, failing loudly on unknown wordings.
+# Input:   DataFrame, name of the wording column.
+# Output:  copy of the DataFrame with a `group` column.
 def add_group(df, col="status_description"):
     """Return df with a `group` column; stop loudly if any wording falls outside the known classes."""
     out = df.copy()

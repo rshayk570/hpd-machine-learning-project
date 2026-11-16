@@ -5,6 +5,9 @@
 Fetched one problem_status_date year at a time (aggregate queries, no row-level download).
 Writes data/history/<group>_by_building_month.parquet (p_... for P, n_... for N).
 """
+# Purpose: Per building and month, how many problem rows ended in one outcome class, over the whole table.
+# Input:   The Open Data API; outputs/wording_groups.csv (02).
+# Output:  data/history/<p|n>_<year>.csv (per-year cache) and data/history/<p|n>_by_building_month.parquet.
 import argparse
 import datetime as dt
 
@@ -13,10 +16,16 @@ import pandas as pd
 from hpd_api import DATA, OUTPUTS, soda_csv
 
 
+# Purpose: Quote a string as a SoQL literal.
+# Input:   string.
+# Output:  the string in single quotes, inner quotes doubled.
 def q(s):
     return "'" + s.replace("'", "''") + "'"
 
 
+# Purpose: Count one class's problem rows per building and month of problem_status_date, year by year.
+# Input:   --group P or N; outputs/wording_groups.csv; the API.
+# Output:  data/history/<p|n>_<year>.csv and <p|n>_by_building_month.parquet.
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--group", default="P", choices=["P", "N"])

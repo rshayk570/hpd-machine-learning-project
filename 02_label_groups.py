@@ -8,6 +8,9 @@ Reads data/by_year/status_*.csv (from 01_fetch_aggregates.py). Writes to outputs
 "Positive rate among verdicts" is P / (P + N): of the problems an inspector ruled on, the share where
 a violation was issued. It is not the share of all complaints.
 """
+# Purpose: Group the status wordings into outcome classes and measure the label population by year.
+# Input:   data/by_year/status_*.csv (01).
+# Output:  outputs/wording_groups.csv, group_counts.csv, label_by_year.csv; printed tables.
 import argparse
 
 import pandas as pd
@@ -16,6 +19,9 @@ from hpd_api import DATA, OUTPUTS
 from hpd_labels import GROUPS, add_group
 
 
+# Purpose: Load every year's wording counts and attach each wording's class.
+# Input:   data/by_year/status_*.csv.
+# Output:  DataFrame: status_description, n, year, group.
 def load_status():
     frames = []
     for f in sorted((DATA / "by_year").glob("status_*.csv")):
@@ -29,6 +35,9 @@ def load_status():
     return add_group(df)
 
 
+# Purpose: Summarize the label population per received year.
+# Input:   classed counts from load_status().
+# Output:  DataFrame by year: rows, P/(P+N), verdict, tenant-fixed, no-access and open shares.
 def per_year(df):
     t = df.pivot_table(index="year", columns="group", values="n", aggfunc="sum", fill_value=0)
     t = t.reindex(columns=GROUPS, fill_value=0)
@@ -45,6 +54,9 @@ def per_year(df):
     return out
 
 
+# Purpose: Write the wording audit, class counts and per-year table.
+# Input:   --from-year; data/by_year/status_*.csv.
+# Output:  outputs/wording_groups.csv, group_counts.csv, label_by_year.csv; printed tables.
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--from-year", type=int, default=2013, help="first received year to include (default 2013)")

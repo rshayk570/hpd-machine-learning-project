@@ -17,6 +17,9 @@ LINE OF TRAVEL  removed from train and test (declared change). These complaints 
 
 Run 09_features.py first. Writes outputs/model/*.csv and data/model/test_scores.parquet.
 """
+# Purpose: Baseline, two models, slices and the k-means check on the locked split and metric.
+# Input:   data/model/complaints_features.parquet (09); --keep-lot keeps LINE OF TRAVEL complaints.
+# Output:  outputs/model/*.csv (outputs/model_with_lot/ with --keep-lot), data/model/test_scores.parquet.
 import sys
 import warnings
 
@@ -62,6 +65,9 @@ print(f"  test complaints at a building with a labeled train complaint: {seen.me
 
 
 # ------------------------------------------------------------------ metric
+# Purpose: The locked metric's cut: which complaints a ranking sends to inspection each week.
+# Input:   complaint frame (week, tie), scores.
+# Output:  boolean Series, True for the top 25% of each week's pool.
 def select(frame, score):
     """Boolean Series: is the complaint in the top 25% of its week's pool."""
     d = pd.DataFrame({"week": frame.week.values, "s": np.asarray(score, float), "tie": frame.tie.values}, index=frame.index)
@@ -71,6 +77,9 @@ def select(frame, score):
     return (rank < k).reindex(frame.index)
 
 
+# Purpose: Per-week recall, precision and ceiling for one selection.
+# Input:   complaint frame (week, label), boolean selection.
+# Output:  DataFrame per week: n, pos, sel, hit, recall, precision, ceiling.
 def weekly(frame, sel):
     g = pd.DataFrame({"week": frame.week, "y": frame.label, "sel": sel, "hit": sel & (frame.label == 1)}).groupby("week")
     w = g.agg(n=("y", "size"), pos=("y", "sum"), sel=("sel", "sum"), hit=("hit", "sum"))
@@ -79,11 +88,17 @@ def weekly(frame, sel):
     return w
 
 
+# Purpose: The headline number for one score.
+# Input:   complaint frame, scores.
+# Output:  mean of the weekly recalls (float).
 def recall(frame, score):
     return weekly(frame, select(frame, score)).recall.mean()
 
 
 BOOT = np.random.default_rng(SEED).integers(0, test.week.nunique(), (DRAWS, test.week.nunique()))
+# Purpose: 95% interval for a mean over test weeks, resampling whole weeks.
+# Input:   one value per test week.
+# Output:  array [2.5th, 97.5th percentile].
 def ci(values):
     """95% interval for the mean of one value per test week, resampling weeks."""
     m = np.asarray(values, float)[BOOT].mean(axis=1)
@@ -96,6 +111,9 @@ NUM = ["n_problems", "anonymous", "month", "weekday", "hour", "pall", "nall", "p
        "months_since_p", "c7", "c30", "days_since_c"] + MAJ
 HGB_CAT = CAT + ["zip"]
 
+# Purpose: Readable version of every feature: categories as they are, numbers cut into named bins.
+# Input:   complaint frame.
+# Output:  DataFrame of text-valued features, ready for one-hot encoding.
 def bins(frame):
     """Readable version of every feature: categories as they are, numbers cut into named bins."""
     b = frame[CAT].copy()
@@ -116,16 +134,25 @@ def bins(frame):
     return b
 
 
+# Purpose: Fit the readable model: L1 logistic regression on one-hot binned features.
+# Input:   fitting frame, C (inverse penalty), optional extra column (the cluster).
+# Output:  (model, encoder, score function).
 def logistic(fit_frame, C, extra=None):
     enc = OneHotEncoder(handle_unknown="infrequent_if_exist", min_frequency=200)
     B = bins(fit_frame) if extra is None else bins(fit_frame).assign(cluster=fit_frame[extra].astype(str))
     m = LogisticRegression(penalty="l1", C=C, solver="liblinear", random_state=SEED).fit(enc.fit_transform(B), fit_frame.label)
+    # Purpose: Score complaints with the fitted logistic model.
+    # Input:   complaint frame.
+    # Output:  array of predicted violation probabilities.
     def score(frame):
         Bf = bins(frame) if extra is None else bins(frame).assign(cluster=frame[extra].astype(str))
         return m.predict_proba(enc.transform(Bf))[:, 1]
     return m, enc, score
 
 
+# Purpose: Fit the flexible model: histogram gradient boosting on raw features.
+# Input:   fitting frame, parameter dict, optional extra numeric column.
+# Output:  (model, feature-matrix function, score function).
 def boosting(fit_frame, params, extra=None):
     num = NUM + ([extra] if extra else [])
     enc = OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=np.nan, max_categories=250)
@@ -200,6 +227,9 @@ print("\nboosting, AUC lost when a feature is shuffled (top 12):"); print(imp.he
 
 # ------------------------------------------------------------------ slices
 SEL = {name: select(test, s) for name, s in S.items() if name != "Random"}
+# Purpose: Recall within each slice for every ranking, with week-bootstrap intervals.
+# Input:   slice variable name, values aligned to test, kind label.
+# Output:  list of row dicts (size, violations, recall, interval, share selected per ranking).
 def slice_table(col, values, kind):
     out = []
     for v in sorted(pd.unique(values)):
@@ -239,6 +269,9 @@ print(sl.loc[sl.kind == "exploratory", show].round(3).to_string(index=False))
 
 # ------------------------------------------------------------------ unsupervised check: building-history clusters
 HIST = ["pall", "nall", "p6", "p12", "n12", "c7", "c30"]
+# Purpose: Building-history vector for k-means.
+# Input:   complaint frame.
+# Output:  array: log1p history counts, rate12, log1p months since last violation.
 def profile(frame):
     return np.column_stack([np.log1p(frame[HIST].to_numpy(float)), frame.rate12, np.log1p(frame.months_since_p.fillna(300))])
 sc = StandardScaler().fit(profile(fit))

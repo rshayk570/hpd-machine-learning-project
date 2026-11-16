@@ -5,6 +5,9 @@ The long status text is not downloaded: rows are fetched one outcome class at a 
 each class from outputs/wording_groups.csv) and tagged with the class locally. Writes
 data/rows/<class>.parquet and data/rows/window.json. Default window: 2024-01-01 to today.
 """
+# Purpose: Row-level pull of one received-date window, one outcome class at a time.
+# Input:   The Open Data API; outputs/wording_groups.csv (02) for each class's wordings.
+# Output:  data/rows/<class>.parquet and data/rows/window.json.
 import argparse
 import datetime as dt
 import json
@@ -18,10 +21,16 @@ COLS = ("complaint_id,problem_id,received_date,problem_status,problem_status_dat
         "problem_duplicate_flag,complaint_anonymous_flag,post_code,community_board")
 
 
+# Purpose: Quote a string as a SoQL literal.
+# Input:   string.
+# Output:  the string in single quotes, inner quotes doubled.
 def q(s):
     return "'" + s.replace("'", "''") + "'"
 
 
+# Purpose: Pull every problem row in the window, class by class (classes already saved are skipped).
+# Input:   --start, --end; outputs/wording_groups.csv; the API.
+# Output:  data/rows/<class>.parquet, data/rows/window.json.
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--start", default="2024-01-01")

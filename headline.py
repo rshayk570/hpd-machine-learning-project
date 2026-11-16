@@ -20,6 +20,9 @@ up to a minute (liblinear converges slowly when the penalty is weak, e.g. 48 s a
 Run 09_features.py first. Cache: data/model/cache/, keyed by the setting and the feature table's size and
 modification time, so editing a feature in 09_features.py and rerunning it (15 s) forces fresh fits.
 """
+# Purpose: Fast what-if runs of the headline (recall at the weekly budget) with cached model scores.
+# Input:   data/model/complaints_features.parquet (09); command-line flags; outputs/model*/headline.csv for --check.
+# Output:  Printed headline table; cached test scores in data/model/cache/*.npy.
 import argparse
 import hashlib
 import json
@@ -42,6 +45,9 @@ CHOSEN = {False: dict(C=0.1, lr=0.05, leaves=15, min_leaf=500, trees=400),
 CACHE = DATA / "model" / "cache"
 
 
+# Purpose: Complaint table and the locked split, built exactly as in 10_models.py.
+# Input:   keep_lot flag.
+# Output:  (train, test) frames.
 def load(keep_lot):
     """Complaint table and the locked split, built exactly as in 10_models.py."""
     c = pd.read_parquet(DATA / "model" / "complaints_features.parquet").sort_values("rec")
@@ -53,6 +59,9 @@ def load(keep_lot):
     return c[c.week < cut], c[c.week >= cut]
 
 
+# Purpose: Top share of each week's pool for one score.
+# Input:   complaint frame, scores, share of the week (the budget).
+# Output:  boolean Series.
 def select(frame, score, k_share):
     d = pd.DataFrame({"week": frame.week.values, "s": np.asarray(score, float), "tie": frame.tie.values}, index=frame.index)
     d = d.sort_values(["week", "s", "tie"], ascending=[True, False, False])
@@ -61,6 +70,9 @@ def select(frame, score, k_share):
     return (rank < k).reindex(frame.index)
 
 
+# Purpose: Per-week recall, precision and ceiling for one selection.
+# Input:   complaint frame, boolean selection.
+# Output:  DataFrame per week: n, pos, sel, hit, recall, precision, ceiling.
 def weekly(frame, sel):
     g = pd.DataFrame({"week": frame.week, "y": frame.label, "sel": sel, "hit": sel & (frame.label == 1)}).groupby("week")
     w = g.agg(n=("y", "size"), pos=("y", "sum"), sel=("sel", "sum"), hit=("hit", "sum"))
@@ -73,6 +85,9 @@ def weekly(frame, sel):
 CAT = ["minor", "type", "borough", "cb", "unit_type", "space_type"]
 
 
+# Purpose: Readable binned features, as in 10_models.py.
+# Input:   complaint frame, list of maj_* columns.
+# Output:  DataFrame of text-valued features.
 def bins(frame, maj):
     b = frame[CAT].copy()
     b["month"] = frame.month.astype(str).str.zfill(2)
@@ -92,12 +107,18 @@ def bins(frame, maj):
     return b
 
 
+# Purpose: Fit the L1 logistic model on train and score test.
+# Input:   train, test, maj_* columns, C.
+# Output:  array of test probabilities.
 def logistic_scores(train, test, maj, C):
     enc = OneHotEncoder(handle_unknown="infrequent_if_exist", min_frequency=200)
     m = LogisticRegression(penalty="l1", C=C, solver="liblinear", random_state=SEED).fit(enc.fit_transform(bins(train, maj)), train.label)
     return m.predict_proba(enc.transform(bins(test, maj)))[:, 1]
 
 
+# Purpose: Fit gradient boosting on train and score test.
+# Input:   train, test, maj_* columns, learning rate, leaves, min samples per leaf, trees.
+# Output:  array of test probabilities.
 def boosting_scores(train, test, maj, lr, leaves, min_leaf, trees):
     num = ["n_problems", "anonymous", "month", "weekday", "hour", "pall", "nall", "p6", "p12", "n12", "rate12",
            "months_since_p", "c7", "c30", "days_since_c"] + maj
@@ -110,6 +131,9 @@ def boosting_scores(train, test, maj, lr, leaves, min_leaf, trees):
     return m.predict_proba(X(test))[:, 1]
 
 
+# Purpose: Test scores for one model setting, from the cache or by fitting once.
+# Input:   model name, setting list, zero-argument fit function.
+# Output:  (scores array, 'cached' or the fit time); writes data/model/cache/<name>-<key>.npy.
 def cached(name, params, fit):
     """Test scores for one model setting, from the cache or by fitting once."""
     feats = DATA / "model" / "complaints_features.parquet"
@@ -125,6 +149,9 @@ def cached(name, params, fit):
     return s, f"fitted in {time.time() - t0:.0f} s"
 
 
+# Purpose: Fit every tuning-grid setting, LINE OF TRAVEL removed and kept, into the cache.
+# Input:   none (reads the feature table).
+# Output:  cache files; prints one line per setting.
 def warm():
     """Fit every setting in 10_models.py's tuning grid, with LINE OF TRAVEL removed and kept, into the cache."""
     grid = [(lr, it, leaves, msl) for lr, it in [(0.05, 400), (0.1, 200)] for leaves in [15, 63] for msl in [50, 500]]
@@ -139,6 +166,9 @@ def warm():
             print(f"boosting {tag} {bp}:", cached("boosting", [tag] + bp, lambda: boosting_scores(train, test, maj, *bp))[1], flush=True)
 
 
+# Purpose: Parse the flags, score the chosen rankings and print the headline table.
+# Input:   command-line flags.
+# Output:  printed table (--check: compares with the saved headline.csv).
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--budget", type=float, default=0.25, help="share of each week's pool visited (locked: 0.25)")

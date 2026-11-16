@@ -5,6 +5,9 @@ Complaint-level label: a complaint is positive if any of its problems is class P
 problem and no P, otherwise unlabeled (the verdict-only population).  Inspected = any problem with a
 verdict (P, N, N_partial, P_existing, P_lead) or a no-access outcome.
 """
+# Purpose: Data inspection behind the proposal's decisions (capacity, grain, baseline, timing, exclusions, labels).
+# Input:   data/rows/*.parquet (04), data/history/*.parquet (05), data/dupflag_by_wording_2024plus.csv, data/monthly_status_2019_2023.csv.
+# Output:  outputs/inspect/*.csv, data/rows/complaints.parquet; printed numbers.
 import json
 import numpy as np
 import pandas as pd
@@ -19,10 +22,16 @@ VERDICT = {"P", "N", "N_partial", "P_existing", "P_lead"}
 rng = np.random.default_rng(0)
 
 
+# Purpose: Print a section heading.
+# Input:   title.
+# Output:  printed line.
 def h(title):
     print(f"\n{'#' * 3} {title}")
 
 
+# Purpose: Save a table to outputs/inspect/ and pass it through.
+# Input:   DataFrame, file stem.
+# Output:  outputs/inspect/<name>.csv; returns the DataFrame.
 def save(df, name):
     df.to_csv(OUT / f"{name}.csv")
     return df
@@ -70,6 +79,9 @@ wk["top10"] = (wk.pool * 0.10).round().astype(int)
 wk["pos_rate"] = wk.positives / wk.pool
 wk["season"] = np.where(wk.index.month.isin([10, 11, 12, 1, 2, 3, 4, 5]), "heat (Oct-May)", "summer (Jun-Sep)")
 save(wk, "weekly")
+# Purpose: Spread of one weekly series.
+# Input:   Series.
+# Output:  Series of min, p10, median, p90, max (rounded to int).
 def q(s):
     return pd.Series({"min": s.min(), "p10": s.quantile(.1), "median": s.median(), "p90": s.quantile(.9), "max": s.max()}).round(0).astype(int)
 for y, sub in wk.groupby(wk.index.year):
@@ -122,6 +134,9 @@ lab = comp[comp.pool].copy()
 lab["midx"] = (lab.month.dt.year - 2003) * 12 + lab.month.dt.month - 1
 hs = hist[["building_id", "midx", "cum"]].rename(columns={"midx": "hm"})
 
+# Purpose: Violation rows at each labeled complaint's building before a given month.
+# Input:   Series of month indexes (exclusive upper bound), aligned to `lab`.
+# Output:  Series of counts aligned to `lab` (0 when no history).
 def prior(upto_exclusive):
     """P rows at the building in months strictly before `upto_exclusive` (a Series of month indexes)."""
     key = pd.DataFrame({"building_id": lab.building_id.values, "hm": (upto_exclusive - 1).values, "i": lab.index})
@@ -152,12 +167,18 @@ if nh_f.exists():
     nh["midx"] = (nh.m.dt.year - 2003) * 12 + nh.m.dt.month - 1
     nh = nh.sort_values(["building_id", "midx"]); nh["cum"] = nh.groupby("building_id").n.cumsum()
     nhs = nh[["building_id", "midx", "cum"]].rename(columns={"midx": "hm"}).sort_values("hm")
+    # Purpose: Clean-inspection rows at each labeled complaint's building before a given month.
+    # Input:   Series of month indexes (exclusive upper bound), aligned to `lab`.
+    # Output:  Series of counts aligned to `lab` (0 when no history).
     def prior_n(upto_exclusive):
         key = pd.DataFrame({"building_id": lab.building_id.values, "hm": (upto_exclusive - 1).values, "i": lab.index}).sort_values("hm")
         return pd.merge_asof(key, nhs, on="hm", by="building_id", direction="backward").set_index("i").cum.fillna(0).astype(int).reindex(lab.index)
     n_now = prior_n(lab.midx)
     for name, k in [("12m", 12), ("all", None)]:
         lab[f"priorN_{name}"] = n_now if k is None else n_now - prior_n(lab.midx - k)
+# Purpose: Precision at the top share of each week's labeled complaints.
+# Input:   complaints with week and label, score Series, share of the week.
+# Output:  mean weekly precision (float).
 def p_at_k(df, score, frac=0.10):
     out = []
     for w, s in df.groupby("week"):
@@ -251,10 +272,16 @@ c2 = comp[comp.cls.isin(["P", "N", "U_fixed", "U_noaccess"])].copy()
 c2["pop"] = np.where(c2.cls.isin(["P", "N"]), "labeled", c2.cls)
 c2 = c2.join(lab[["prior_all", "prior_12m"]], how="left")
 c2["prior12_bin"] = pd.cut(c2.prior_12m.fillna(-1), [-2, -1, 0, 2, 9, 1e9], labels=["(not computed)", "0", "1-2", "3-9", "10+"])
+# Purpose: Distribution of one column in each population (labeled, U_fixed, U_noaccess).
+# Input:   column name, number of most common values to keep.
+# Output:  DataFrame of shares, one column per population.
 def dist(col, top=8):
     t = c2.groupby("pop")[col].value_counts(normalize=True).unstack(0).fillna(0)
     t = t.loc[t.sum(axis=1).sort_values(ascending=False).index[:top]]
     return t.round(3)
+# Purpose: How far each excluded population is from the labeled one.
+# Input:   column name.
+# Output:  dict of total variation distances for U_fixed and U_noaccess.
 def tvd(col):
     t = c2.groupby("pop")[col].value_counts(normalize=True).unstack(0).fillna(0)
     return {k: round(0.5 * (t["labeled"] - t[k]).abs().sum(), 3) for k in ["U_fixed", "U_noaccess"]}
